@@ -5,7 +5,8 @@ var uuid = require( 'node-uuid' )
 var heartbeat = exports = module.exports = {
 	serviceName : 'None',
 	rabbitMqURL : 'amqp://localhost',
-	serviceID   : uuid.v4()
+	serviceID   : uuid.v4(),
+	status      : ''
 }
 
 heartbeat.start = function start( amqURL, name, interval  ) {
@@ -14,6 +15,10 @@ heartbeat.start = function start( amqURL, name, interval  ) {
 	var timerInterval = 10000
 	if ( interval ) timerInterval = interval
 	var heartbeatTimerId = setInterval( amqpHeartbeat, timerInterval );
+}
+
+heartbeat.setStatus = function setStatus( statusText ) {
+	this.status = statusText
 }
 
 function amqpHeartbeat() {
@@ -33,7 +38,8 @@ function amqpHeartbeat() {
 								serviceName: heartbeat.serviceName, 
 								serviceID: heartbeat.serviceID, 
 								heartbeatTime: Date.now(), 
-								host: host 
+								host: host,
+								status: heartbeat.status
 							}
 						var msg = JSON.stringify( heartbeatMsg )
 						ch.assertExchange( 'heartbeats', 'topic',	{ durable : false }	);
