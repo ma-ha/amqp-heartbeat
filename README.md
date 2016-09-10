@@ -23,3 +23,6 @@ heartbeat.setStatus( 'Users in web shop: '+ sessionCount )
 Use [amqp-heartbeat-to-mongodb package](https://www.npmjs.com/package/amqp-heartbeat-to-mongodb) 
 to collect and store heartbeat messages in a MongoDB. 
  
+## Web GUI
+
+A web UI demo is available, check out the [amq-heartbeat-gui node package](https://www.npmjs.com/package/amq-heartbeat-gui) 
