@@ -7,7 +7,6 @@ var heartbeat = exports = module.exports = {
 	rabbitMqURL : 'amqp://localhost',
 	serviceID   : uuid.v4(),
 	status      : '',
-//	mqConn      : null,
 	mqChannel   : null
 }
 
@@ -20,7 +19,6 @@ heartbeat.start = function start( amqURL, name, interval  ) {
 	mqConnect( 
 		function ( err, ch ) {
 			if ( ! err ) {
-				//heartbeat.mqConn = conn
 				heartbeat.mqChannel = ch 
 				setInterval( amqpHeartbeat, timerInterval )
 				log.info( 'amqp-heartbeat', 'Started.' )
@@ -57,28 +55,19 @@ function mqConnect( callback ) {
 }
 
 function amqpHeartbeat() {
-	log.info( 'amqp-heartbeat', 'start with '+heartbeat.rabbitMqURL  )
-//	heartbeat.mqConn.createChannel( 
-//		function( err, ch ) {
-//			if ( err != null ) { 
-//				log.error( 'amqp-heartbeat', err ); process.exit(1) 
-//			}
-//	
-			var host = 'unknown'
-			if ( process.env['HOSTNAME'] ) host = process.env['HOSTNAME']
-			var heartbeatMsg = 
-				{ 
-					serviceName: heartbeat.serviceName, 
-					serviceID: heartbeat.serviceID, 
-					heartbeatTime: Date.now(), 
-					host: host,
-					status: heartbeat.status
-				}
-			var msg = JSON.stringify( heartbeatMsg )
-			heartbeat.mqChannel.assertExchange( 'heartbeats', 'topic',	{ durable : false }	);
-			heartbeat.mqChannel.publish( 'heartbeats', 'dashboard.collector', new Buffer( msg ) )
-		    
-	    log.info( 'amqp-heartbeat' + msg  );
-//	  }
-//	)
+	//log.info( 'amqp-heartbeat', 'start with '+heartbeat.rabbitMqURL  )
+	var host = 'unknown'
+	if ( process.env['HOSTNAME'] ) host = process.env['HOSTNAME']
+	var heartbeatMsg = 
+		{ 
+			serviceName: heartbeat.serviceName, 
+			serviceID: heartbeat.serviceID, 
+			heartbeatTime: Date.now(), 
+			host: host,
+			status: heartbeat.status
+		}
+	var msg = JSON.stringify( heartbeatMsg )
+	heartbeat.mqChannel.assertExchange( 'heartbeats', 'topic',	{ durable : false }	)
+	heartbeat.mqChannel.publish( 'heartbeats', 'dashboard.collector', new Buffer( msg ) )
+	//log.info( 'amqp-heartbeat' + msg  );
 }
