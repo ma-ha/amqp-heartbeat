@@ -7,7 +7,8 @@ var heartbeat = exports = module.exports = {
 	rabbitMqURL : 'amqp://localhost',
 	serviceID   : uuid.v4(),
 	status      : '',
-	mqConn      : null
+//	mqConn      : null,
+	mqChannel   : null
 }
 
 heartbeat.start = function start( amqURL, name, interval  ) {
@@ -17,9 +18,10 @@ heartbeat.start = function start( amqURL, name, interval  ) {
 	if ( interval ) timerInterval = interval
 	// start it
 	mqConnect( 
-		function ( err, conn ) {
+		function ( err, ch ) {
 			if ( ! err ) {
-				heartbeat.mqConn = conn
+				//heartbeat.mqConn = conn
+				heartbeat.mqChannel = ch 
 				setInterval( amqpHeartbeat, timerInterval )
 				log.info( 'amqp-heartbeat', 'Started.' )
 			}
@@ -35,22 +37,33 @@ function mqConnect( callback ) {
 	amqp.connect( heartbeat.rabbitMqURL,
 			function( err, conn ) {
 				if ( err != null ) { 
-					log.error( 'amqp-heartbeat', err ); process.exit(1) 
+					log.error( 'amqp-heartbeat', err )
+					callback( err, null ) 
+				} else {
+					conn.createChannel( 
+						function( err, ch ) {
+							if ( err != null ) { 
+								log.error( 'amqp-heartbeat', err ) 
+								callback( err, null ) 
+							} else {
+								//log.info( 'amqp-heartbeat', 'connected to '+heartbeat.rabbitMqURL )
+								callback( err, ch )								
+							}
+						}
+					)					
 				}
-				//log.info( 'amqp-heartbeat', 'connected to '+heartbeat.rabbitMqURL )
-				callback( err, conn )
 			}
 	)
 }
 
 function amqpHeartbeat() {
-	//log.info( 'amqp-heartbeat', 'start with '+heartbeat.rabbitMqURL  )
-	heartbeat.mqConn.createChannel( 
-		function( err, ch ) {
-			if ( err != null ) { 
-				log.error( 'amqp-heartbeat', err ); process.exit(1) 
-			}
-	
+	log.info( 'amqp-heartbeat', 'start with '+heartbeat.rabbitMqURL  )
+//	heartbeat.mqConn.createChannel( 
+//		function( err, ch ) {
+//			if ( err != null ) { 
+//				log.error( 'amqp-heartbeat', err ); process.exit(1) 
+//			}
+//	
 			var host = 'unknown'
 			if ( process.env['HOSTNAME'] ) host = process.env['HOSTNAME']
 			var heartbeatMsg = 
@@ -62,10 +75,10 @@ function amqpHeartbeat() {
 					status: heartbeat.status
 				}
 			var msg = JSON.stringify( heartbeatMsg )
-			ch.assertExchange( 'heartbeats', 'topic',	{ durable : false }	);
-			ch.publish( 'heartbeats', 'dashboard.collector', new Buffer( msg ) )
+			heartbeat.mqChannel.assertExchange( 'heartbeats', 'topic',	{ durable : false }	);
+			heartbeat.mqChannel.publish( 'heartbeats', 'dashboard.collector', new Buffer( msg ) )
 		    
-	    //log.info( 'amqp-heartbeat' + msg  );
-	  }
-	)
+	    log.info( 'amqp-heartbeat' + msg  );
+//	  }
+//	)
 }
