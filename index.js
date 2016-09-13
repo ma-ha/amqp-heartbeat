@@ -1,20 +1,21 @@
 var amqp = require( 'amqplib/callback_api' )
 var log  = require( 'npmlog' )
 var uuid = require( 'node-uuid' )
-var pjson = require('./package.json');
 
 var heartbeat = exports = module.exports = {
 	serviceName : 'None',
 	rabbitMqURL : 'amqp://localhost',
 	serviceID   : uuid.v4(),
 	status      : '',
+	version     : '',
 	mqChannel   : null
 }
 
-heartbeat.start = function start( amqURL, name, interval  ) {
+heartbeat.start = function start( amqURL, name, version, interval  ) {
 	this.serviceName = name
 	this.rabbitMqURL = amqURL
 	var timerInterval = 10000
+	this.version = version
 	if ( interval ) timerInterval = interval
 	// start it
 	mqConnect( 
@@ -58,17 +59,15 @@ function mqConnect( callback ) {
 function amqpHeartbeat() {
 	//log.info( 'amqp-heartbeat', 'start with '+heartbeat.rabbitMqURL  )
 	var host = 'unknown'
-	var ver = ''
 	if ( process.env['HOSTNAME'] ) host = process.env['HOSTNAME']
-	if ( pjson && pjson.version ) { ver = pjson.version }
 	var heartbeatMsg = 
 		{ 
-			serviceName: heartbeat.serviceName, 
-			serviceVersion: ver,
-			serviceID: heartbeat.serviceID, 
-			heartbeatTime: Date.now(), 
-			host: host,
-			status: heartbeat.status
+			serviceName    : heartbeat.serviceName, 
+			serviceVersion : heartbeat.version,
+			serviceID      : heartbeat.serviceID, 
+			heartbeatTime  : Date.now(), 
+			host           : host,
+			status         : heartbeat.status
 		}
 	var msg = JSON.stringify( heartbeatMsg )
 	heartbeat.mqChannel.assertExchange( 'heartbeats', 'topic',	{ durable : false }	)
