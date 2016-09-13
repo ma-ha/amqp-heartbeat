@@ -1,6 +1,6 @@
 {
 	"name":"amqp-heartbeat",
-	"version":"1.4.0",
+	"version":"1.5.0",
 	"description":"Send heartbeat messages to RabbitMQ",
 	"author":"ma-ha",
 	"main":"index.js",
