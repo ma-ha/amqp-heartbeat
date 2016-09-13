@@ -1,6 +1,7 @@
 var amqp = require( 'amqplib/callback_api' )
 var log  = require( 'npmlog' )
 var uuid = require( 'node-uuid' )
+var pjson = require('./package.json');
 
 var heartbeat = exports = module.exports = {
 	serviceName : 'None',
@@ -57,10 +58,13 @@ function mqConnect( callback ) {
 function amqpHeartbeat() {
 	//log.info( 'amqp-heartbeat', 'start with '+heartbeat.rabbitMqURL  )
 	var host = 'unknown'
+	var ver = ''
 	if ( process.env['HOSTNAME'] ) host = process.env['HOSTNAME']
+	if ( pjson && pjson.version ) { ver = pjson.version }
 	var heartbeatMsg = 
 		{ 
 			serviceName: heartbeat.serviceName, 
+			serviceVersion: ver,
 			serviceID: heartbeat.serviceID, 
 			heartbeatTime: Date.now(), 
 			host: host,
