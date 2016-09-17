@@ -8,6 +8,7 @@ var heartbeat = exports = module.exports = {
 	serviceID   : uuid.v4(),
 	status      : '',
 	version     : '',
+	error       : '',
 	mqChannel   : null
 }
 
@@ -31,6 +32,10 @@ heartbeat.start = function start( amqURL, name, version, interval  ) {
 
 heartbeat.setStatus = function setStatus( statusText ) {
 	this.status = statusText
+}
+
+heartbeat.setError = function setError( errorText ) {
+	this.error = errorText
 }
 
 function mqConnect( callback ) {
@@ -67,7 +72,8 @@ function amqpHeartbeat() {
 			serviceID      : heartbeat.serviceID, 
 			heartbeatTime  : Date.now(), 
 			host           : host,
-			status         : heartbeat.status
+			status         : heartbeat.status,
+			error          : heartbeat.error
 		}
 	var msg = JSON.stringify( heartbeatMsg )
 	heartbeat.mqChannel.assertExchange( 'heartbeats', 'topic',	{ durable : false }	)
